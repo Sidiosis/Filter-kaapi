@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Filter Kaapi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-900 text-slate-100">
+  <div class="flex flex-col h-screen" id="app">
+<header class="bg-slate-800 border-b border-slate-700 p-4 shadow-sm sticky top-0 z-10">
+<h1 class="text-2xl font-bold text-center text-white">Filter Kaapi</h1>
+<p class="text-center text-sm text-slate-400 mt-1">Smart Task Management and Note taking app with useful and handy filters</p>
+</header>
+<main class="flex-grow overflow-y-auto p-4 md:p-6 lg:p-8 pb-[200px]" id="notes-container">
+<div class="flex flex-col gap-4 max-w-2xl mx-auto" id="notes-list">
+</div>
+<!-- Eisenhower Matrix View -->
+<div class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto" id="eisenhower-matrix">
+<div class="bg-red-900/40 border border-red-700 rounded-lg p-4 flex flex-col" id="do-quadrant">
+<h3 class="text-lg font-bold text-red-300 mb-2">Do (Urgent &amp; Important)</h3>
+<div class="flex flex-col gap-2 overflow-y-auto"></div>
+</div>
+<div class="bg-yellow-900/40 border border-yellow-700 rounded-lg p-4 flex flex-col" id="decide-quadrant">
+<h3 class="text-lg font-bold text-yellow-300 mb-2">Decide (Important &amp; Not Urgent)</h3>
+<div class="flex flex-col gap-2 overflow-y-auto"></div>
+</div>
+<div class="bg-blue-900/40 border border-blue-700 rounded-lg p-4 flex flex-col" id="delegate-quadrant">
+<h3 class="text-lg font-bold text-blue-300 mb-2">Delegate (Urgent &amp; Not Important)</h3>
+<div class="flex flex-col gap-2 overflow-y-auto"></div>
+</div>
+<div class="bg-slate-700/40 border border-slate-600 rounded-lg p-4 flex flex-col" id="discard-quadrant">
+<h3 class="text-lg font-bold text-slate-300 mb-2">Discard (Not Important &amp; Not Urgent) / Undefined</h3>
+<div class="flex flex-col gap-2 overflow-y-auto"></div>
+</div>
+</div>
+</main>
+<footer class="bg-slate-800/80 backdrop-blur-sm border-t border-slate-700 p-3 fixed bottom-0 w-full z-10" id="filter-bar">
+<div class="max-w-7xl mx-auto flex flex-col gap-4">
+<!-- View filters and Search bar on the same line -->
+<div class="flex items-center gap-2 px-2 flex-wrap">
+<p class="text-xs font-semibold text-slate-400 whitespace-nowrap">View:</p>
+<button class="view-filter-btn whitespace-nowrap px-3 py-1 text-xs font-medium bg-slate-700 text-slate-200 border border-slate-600 rounded-full hover:bg-slate-600 transition-colors active" id="show-all-btn">All</button>
+<button class="view-filter-btn whitespace-nowrap px-3 py-1 text-xs font-medium bg-slate-700 text-slate-200 border border-slate-600 rounded-full hover:bg-slate-600 transition-colors" id="show-todos-btn">To-Dos</button>
+<button class="view-filter-btn whitespace-nowrap px-3 py-1 text-xs font-medium bg-slate-700 text-slate-200 border border-slate-600 rounded-full hover:bg-slate-600 transition-colors" id="show-notes-btn">Notes</button>
+<button class="view-filter-btn whitespace-nowrap px-3 py-1 text-xs font-medium bg-slate-700 text-slate-200 border border-slate-600 rounded-full hover:bg-slate-600 transition-colors" id="show-priority-matrix-btn">Priority Matrix</button>
+<button class="px-3 py-1 text-xs font-medium bg-slate-700 text-slate-200 border border-slate-600 rounded-full hover:bg-slate-600 transition-colors whitespace-nowrap" id="toggle-completed-btn">Hide Completed</button>
+<!-- Search bar relocated here -->
+<input class="flex-1 min-w-[120px] px-3 py-1 text-xs bg-slate-700 text-white rounded-lg border border-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ml-auto" id="search-input" placeholder="Search notes..." type="text"/>
+</div>
+<!-- Tag filters on a separate line with horizontal scrolling -->
+<div class="flex items-center w-full filter-scroll-container px-2" id="tag-filter-section">
+<p class="text-xs font-semibold text-slate-400 whitespace-nowrap" id="manage-tags-btn">Tags:</p>
+<div class="flex items-center gap-2" id="filter-chips-container">
+<!-- Tag chips will be rendered here -->
+</div>
+</div>
+</div>
+</footer>
+<!-- Add Note Button -->
+<button class="fixed bottom-[120px] right-6 bg-indigo-600 text-white rounded-full p-4 shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-110 z-20" id="add-note-btn">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+ Note Editing Modal 
+<div class="modal hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" id="note-modal">
+<div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+<div class="p-6 border-b border-slate-700">
+<h2 class="text-xl font-bold text-white" id="modal-title">Add New Entry</h2>
+</div>
+<div class="p-6 overflow-y-auto">
+<form id="note-form">
+<input id="note-id" type="hidden"/>
+<div class="mb-4">
+<label class="block text-sm font-medium text-slate-300 mb-1" for="note-title">Title</label>
+<input class="w-full px-3 py-2 border border-slate-600 bg-slate-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="note-title" required="" type="text"/>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-slate-300 mb-1" for="note-content">Content</label>
+<textarea class="w-full px-3 py-2 border border-slate-600 bg-slate-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="note-content" rows="4"></textarea>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-slate-300 mb-1" for="note-tags">Tags</label>
+<div class="tag-input-container border border-slate-600 rounded-md p-2 bg-slate-700">
+<div class="flex flex-wrap items-center" id="tag-pills-container"></div>
+<input class="w-full focus:outline-none bg-transparent" id="note-tags-input" placeholder="Add a tag and press Enter..." type="text"/>
+</div>
+</div>
+<div class="mb-4">
+<label class="block text-sm font-medium text-slate-300 mb-2">Available Tags</label>
+<div class="flex flex-wrap gap-2" id="suggestive-tags-container">
+</div>
+</div>
+<div class="flex items-center">
+<input class="h-4 w-4 text-indigo-600 border-slate-600 bg-slate-700 rounded focus:ring-indigo-500" id="note-is-todo" type="checkbox"/>
+<label class="ml-2 block text-sm text-slate-100" for="note-is-todo">This is a To-Do item</label>
+</div>
+</form>
+</div>
+<div class="p-4 bg-slate-700 border-t border-slate-600 flex justify-end gap-3">
+<button class="px-4 py-2 bg-slate-600 text-white text-sm font-medium rounded-md border border-slate-500 shadow-sm hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="cancel-btn" type="button">Cancel</button>
+<button class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" form="note-form" id="save-btn" type="submit">Save</button>
+</div>
+</div>
+</div>
+ Manage Tags Modal 
+<div class="modal hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" id="manage-tags-modal">
+<div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+<div class="p-6 border-b border-slate-700 flex justify-between items-center">
+<h2 class="text-xl font-bold text-white">Manage Tags</h2>
+<button class="text-slate-400 hover:text-white" id="close-manage-tags-btn">×</button>
+</div>
+<div class="p-6 overflow-y-auto">
+<div class="mb-4">
+<label class="block text-sm font-medium text-slate-300 mb-1" for="new-tag-input">Add a new tag</label>
+<div class="flex gap-2">
+<input class="flex-grow px-3 py-2 border border-slate-600 bg-slate-700 text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" id="new-tag-input" placeholder="New Tag Name" type="text"/>
+<button class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-indigo-700" id="add-new-tag-btn">Add</button>
+</div>
+</div>
+<div class="mt-6 border border-slate-700 rounded-md">
+<ul class="divide-y divide-slate-700" id="manage-tags-list">
+</ul>
+</div>
+</div>
+</div>
+</div>
+  <!-- We'll extract from the uploaded working .html file -->
+  <script src="app.js"></script>
+</body>
+</html>
